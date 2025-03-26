@@ -16,7 +16,9 @@ To clone a repository:
 ```
 git clone https://github.com/Ramsky69/Finance-Tracker.git
 
-then
+```
+then do
+```
 
 cd Finance-Tracker
 
