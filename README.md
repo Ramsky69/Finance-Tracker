@@ -24,6 +24,19 @@ cd Finance-Tracker
 
 ```
 
+once done, Install the backend dependencies:
+```
+cd backend
+pip install -r requirements.txt
+```
+
+after do
+```
+cd ..
+cd frontend
+npm install
+```
+
 That is all for the basics
 
 This is made of
