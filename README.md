@@ -2,11 +2,20 @@ Hi this is a simple finance tracker.
 Currently Register and Login works.
 To be developed:
 -Dashboard
+
 -Profile
+
 -Logout
--Login
--LandingPage
--About
+
+-Login(/)
+
+-LandingPage(/)
+
+-About(/)
+
+-Register(/)
+
+-Terms(/)
 
 Pls do (/) if it is done.
 
