@@ -4,6 +4,8 @@ import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AboutUs from './pages/AboutUs';
+import Terms from './pages/Terms';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,15 @@ const router = createBrowserRouter([
     path: '/register',
     element: <Register />,
   },
+  {
+    path: '/about',
+    element: <AboutUs />,
+  },
+  {
+    path: '/terms',
+    element: <Terms />,
+  },
+
 ]);
 
 function App() {

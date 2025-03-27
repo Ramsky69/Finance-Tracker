@@ -9,3 +9,11 @@ python-dotenv==1.0.0
 pytz==2025.1
 sqlparse==0.5.3
 tzdata==2025.2
+<<<<<<< HEAD
+=======
+
+sudo -u postgres psql
+CREATE DATABASE your_database_name;
+CREATE USER your_database_user WITH PASSWORD 'your_database_password';
+GRANT ALL PRIVILEGES ON DATABASE your_database_name TO your_database_user;
+>>>>>>> 2179708 (Configured PostgreSQL and updated settings)
