@@ -27,6 +27,12 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = '__all__'
+        read_only_fields = ['user']  # Make 'user' read-only
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['amount'] = float(instance.amount)  # Ensure amount is a number
+        return representation
 
 class BudgetSerializer(serializers.ModelSerializer):
     class Meta:

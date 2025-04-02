@@ -6,6 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer, TransactionSerializer, BudgetSerializer, ProfileSerializer  # Add ProfileSerializer
 from .models import Transaction, Budget, Profile  # Add Profile model import
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.permissions import IsAuthenticated
 
 # Register View
 class RegisterView(generics.CreateAPIView):
@@ -48,8 +49,16 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 # Transactions Views
 class TransactionListCreateView(generics.ListCreateAPIView):
-    queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]  # Enforce authentication
+
+    def get_queryset(self):
+        # Filter transactions by the authenticated user
+        return Transaction.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Assign the authenticated user to the transaction
+        serializer.save(user=self.request.user)
 
 class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Transaction.objects.all()
@@ -57,11 +66,18 @@ class TransactionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
 # Budgets Views
 class BudgetListCreateView(generics.ListCreateAPIView):
-    queryset = Budget.objects.all()
     serializer_class = BudgetSerializer
+    permission_classes = [IsAuthenticated]  # Enforce authentication
+
+    def get_queryset(self):
+        # Filter budgets by the authenticated user
+        return Budget.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Assign the authenticated user to the budget
+        serializer.save(user=self.request.user)
 
 class BudgetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Budget.objects.all()
     serializer_class = BudgetSerializer
 
-    
