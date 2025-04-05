@@ -2,21 +2,21 @@ Hi this is a simple finance tracker.
 Currently Register and Login works.
 To be developed:
 
--Dashboard
+-Dashboard(/)
 
 -Profile
 
 -Logout
 
--Login(/)
+-Login(/)Roxas
 
--LandingPage(/)
+-LandingPage(/)Roxas
 
--About(/)
+-About(/)(Roxas)
 
--Register(/)
+-Register(/)(Roxas)
 
--Terms(/)
+-Terms(/)(Roxas)
 
 Pls do (/) if it is done.
 
