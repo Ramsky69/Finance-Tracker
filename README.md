@@ -2,7 +2,7 @@ Hi this is a simple finance tracker.
 Currently Register and Login works.
 To be developed:
 
--Dashboard(/)
+-Dashboard(/)(Roxas)
 
 -Profile
 
