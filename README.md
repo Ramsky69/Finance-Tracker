@@ -4,6 +4,7 @@ To be developed:
 
 -Dashboard(/)(Roxas)
 
+-Profile
 
 -Logout(/) (Roxas)
 
