@@ -1,7 +1,49 @@
 import { useNavigate } from 'react-router-dom';
+import { Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartOptions } from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Landing = () => {
   const navigate = useNavigate();
+
+  // Data for the doughnut chart
+  const pieData = {
+    labels: ['Entertainment', 'Food', 'Transportation', 'Remaining Budget'],
+    datasets: [
+      {
+        data: [5000, 4000, 5400, 4600], // Example values
+        backgroundColor: ['#FFA500', '#1E90FF', '#9370DB', '#32CD32'],
+        hoverBackgroundColor: ['#FFB347', '#63B8FF', '#AB82FF', '#90EE90'],
+        borderWidth: 0, // Removes border around segments
+      },
+    ],
+  };
+
+  // Options for the doughnut chart
+  const pieOptions: ChartOptions<'doughnut'> = {
+    plugins: {
+      legend: {
+        position: 'top', // Must be one of the allowed values
+        labels: {
+          color: '#FFFFFF',
+          font: {
+            size: 14,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (tooltipItem) => {
+            const value = tooltipItem.raw as number; // Ensure `raw` is a number
+            return `$${value.toLocaleString()}`;
+          },
+        },
+      },
+    },
+    maintainAspectRatio: false,
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -53,41 +95,17 @@ const Landing = () => {
           {/* Right Section */}
           <div className="lg:w-1/2 mt-12 lg:mt-0 lg:ml-16">
             <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="text-right text-gray-400">Updated Today</div>
-              <h2 className="text-4xl font-bold">$5,254.50</h2>
-              <p className="text-gray-400">Total Balance</p>
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-300">Recent Transactions</h3>
-                <ul className="mt-4 space-y-2">
-                  <li className="flex justify-between">
-                    <span>Coffee Shop</span>
-                    <span className="text-red-500">- $4.50</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Grocery Store</span>
-                    <span className="text-red-500">- $32.75</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Salary Deposit</span>
-                    <span className="text-green-500">+ $1,200.00</span>
-                  </li>
-                </ul>
+              <h3 className="text-lg font-semibold text-gray-300">Budget Overview</h3>
+              <div className="mt-6" style={{ height: '300px' }}>
+                <Doughnut data={pieData} options={pieOptions} />
               </div>
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-gray-300">Savings Goal</h4>
-                  <div className="bg-gray-700 rounded-full h-2 mt-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <div className="text-right text-gray-400 mt-1">$650 / $1,000</div>
-                </div>
-                <div>
-                  <h4 className="text-gray-300">Monthly Budget</h4>
-                  <div className="bg-gray-700 rounded-full h-2 mt-2">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '80%' }}></div>
-                  </div>
-                  <div className="text-right text-gray-400 mt-1">$2,400 / $3,000</div>
-                </div>
+              <div className="mt-6 text-center">
+                <p className="text-gray-400">
+                  Total Expenses: <span className="text-red-500">$15,400.00</span>
+                </p>
+                <p className="text-gray-400">
+                  Remaining Budget: <span className="text-green-500">$4,600.00</span>
+                </p>
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ from .serializers import UserSerializer, TransactionSerializer, BudgetSerializer
 from .models import Transaction, Budget, Profile  # Add Profile model import
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 # Register View
 class RegisterView(generics.CreateAPIView):
@@ -80,4 +81,24 @@ class BudgetListCreateView(generics.ListCreateAPIView):
 class BudgetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Budget.objects.all()
     serializer_class = BudgetSerializer
+
+# Add a view to handle budget retrieval and updates
+class UserBudgetView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Fetch the user's budget
+        budget = Budget.objects.filter(user=request.user).first()
+        if budget:
+            return Response({'budget': budget.limit}, status=status.HTTP_200_OK)
+        return Response({'budget': 0}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        # Update or create the user's budget
+        budget_limit = request.data.get('budget', 0)
+        budget, created = Budget.objects.update_or_create(
+            user=request.user,
+            defaults={'limit': budget_limit}
+        )
+        return Response({'budget': budget.limit}, status=status.HTTP_200_OK)
 

@@ -1,6 +1,10 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Transaction {
   id: number;
@@ -10,6 +14,18 @@ interface Transaction {
   date: string;
   status: string; // Added for "Result" column
 }
+
+const categoryColors: { [key: string]: string } = {
+  Housing: '#F87171', // Red
+  Transportation: '#A78BFA', // Purple
+  Food: '#60A5FA', // Blue
+  Utilities: '#FBBF24', // Yellow
+  Healthcare: '#A78BFA', // Purple
+  Insurance: '#F472B6', // Pink
+  Savings: '#10B981', // Teal
+  Entertainment: '#F59E0B', // Orange
+  Other: '#9CA3AF', // Gray
+};
 
 const Dashboard = () => {
   const { token } = useAuth();
@@ -22,7 +38,10 @@ const Dashboard = () => {
     status: 'Pending',
   });
   const [sortBy, setSortBy] = useState<string>('Date'); // Default sorting by Date
+  const [budget, setBudget] = useState<number>(1000); // Default budget
+  const [totalExpenses, setTotalExpenses] = useState<number>(0);
 
+  // Fetch transactions on component mount
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -42,6 +61,31 @@ const Dashboard = () => {
     fetchTransactions();
   }, [token]);
 
+  useEffect(() => {
+    interface BudgetResponse {
+      budget: number;
+    }
+
+    const fetchBudget = async () => {
+      try {
+        const response = await api.get<BudgetResponse>('/user-budget', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setBudget(response.data.budget);
+      } catch (error) {
+        console.error('Error fetching budget:', error);
+      }
+    };
+
+    fetchBudget();
+  }, [token]);
+
+  // Recalculate total expenses whenever transactions change
+  useEffect(() => {
+    const total = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+    setTotalExpenses(total);
+  }, [transactions]);
+
   const handleAddTransaction = async () => {
     try {
       const payload = {
@@ -49,12 +93,10 @@ const Dashboard = () => {
         amount: parseFloat(newTransaction.amount.toFixed(2)), // Ensure amount is a decimal
         date: new Date(newTransaction.date).toISOString(),   // Convert date to ISO format
       };
-      console.log('Sending transaction:', payload);
       const response = await api.post<Transaction>('/transactions/', payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Transaction added:', response.data);
-      setTransactions([...transactions, response.data]);
+      setTransactions([...transactions, response.data]); // Add new transaction to the list
       setNewTransaction({ description: '', category: '', amount: 0, date: '', status: 'Pending' });
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -66,7 +108,7 @@ const Dashboard = () => {
       await api.delete(`/transactions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTransactions(transactions.filter((transaction) => transaction.id !== id));
+      setTransactions(transactions.filter((transaction) => transaction.id !== id)); // Remove transaction from the list
     } catch (error) {
       console.error('Error deleting transaction:', error);
     }
@@ -85,12 +127,57 @@ const Dashboard = () => {
     setTransactions(sortedTransactions);
   };
 
+  const handleBudgetChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newBudget = parseFloat(e.target.value) || 0;
+    setBudget(newBudget);
+  
+    try {
+      await api.post(
+        '/user-budget/',
+        { budget: newBudget },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      console.error('Error updating budget:', error);
+    }
+  };
+
+  // Calculate totals for each category
+  const categoryTotals = transactions.reduce((totals, transaction) => {
+    totals[transaction.category] = (totals[transaction.category] || 0) + transaction.amount;
+    return totals;
+  }, {} as { [key: string]: number });
+  
+  const chartData = {
+    labels: [...Object.keys(categoryTotals), 'Remaining Budget'], // Add "Remaining Budget" as a label
+    datasets: [
+      {
+        data: [
+          ...Object.values(categoryTotals),
+          Math.max(budget - totalExpenses, 0), // Calculate remaining budget
+        ],
+        backgroundColor: [
+          ...Object.keys(categoryTotals).map(
+            (category) => categoryColors[category] || '#D1D5DB' // Use category colors or default gray
+          ),
+          '#34D399', // Green for remaining budget
+        ],
+        hoverBackgroundColor: [
+          ...Object.keys(categoryTotals).map(
+            (category) => categoryColors[category] || '#9CA3AF' // Use category hover colors or default gray
+          ),
+          '#10B981', // Darker green for remaining budget
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Dashboard Header */}
       <header className="bg-gray-800 p-4 flex justify-between items-center shadow-md">
         <div className="text-2xl font-bold text-white">
-          <span className="text-purple-500">UC</span>ASH
+          <span className="text-blue-500">UC</span>ASH
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -110,7 +197,30 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-row gap-8">
-        {/* Table Section */}
+        {/* Budget Chart Section (Left) */}
+        <aside className="w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-lg font-semibold mb-4">Budget Overview</h2>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300">Set Budget</label>
+            <input
+              type="number"
+              className="mt-1 block w-full border-gray-600 rounded-md shadow-sm bg-gray-900 text-gray-300"
+              value={budget}
+              onChange={handleBudgetChange}
+            />
+          </div>
+          <Doughnut data={chartData} />
+          <div className="mt-4 text-center">
+            <p className="text-gray-300">
+              Total Expenses: <span className="text-red-500">${totalExpenses.toFixed(2)}</span>
+            </p>
+            <p className="text-gray-300">
+              Remaining Budget: <span className="text-green-500">${Math.max(budget - totalExpenses, 0).toFixed(2)}</span>
+            </p>
+          </div>
+        </aside>
+
+        {/* Table Section (Middle) */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-4xl font-bold">Transaction</h1>
@@ -181,7 +291,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Form Section */}
+        {/* Form Section (Right) */}
         <aside className="w-1/4 bg-gray-800 p-6 rounded-lg shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Category</h2>
           <form>
@@ -229,8 +339,20 @@ const Dashboard = () => {
                 type="number"
                 className="mt-1 block w-full border-gray-600 rounded-md shadow-sm bg-gray-900 text-gray-300"
                 placeholder="0.00"
-                value={newTransaction.amount}
-                onChange={(e) => setNewTransaction({ ...newTransaction, amount: parseFloat(e.target.value) || 0 })}
+                value={isNaN(newTransaction.amount) ? '' : newTransaction.amount} // Show empty if amount is NaN
+                onFocus={(e) => {
+                  if (newTransaction.amount === 0) {
+                    setNewTransaction({ ...newTransaction, amount: NaN }); // Clear the input on focus if it's 0
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '') {
+                    setNewTransaction({ ...newTransaction, amount: NaN }); // Reset to NaN if input is empty on blur
+                  }
+                }}
+                onChange={(e) =>
+                  setNewTransaction({ ...newTransaction, amount: parseFloat(e.target.value) || 0 })
+                }
               />
             </div>
             <button
